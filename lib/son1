@@ -1,0 +1,101 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
+
+void main() {
+  runApp(MaterialApp(
+    home: MyApp(),
+  ));
+}
+
+class MyApp extends StatefulWidget {
+  @override
+  _MyAppState createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  List<LatLng> routePoints = [];
+  LatLng startPoint = LatLng(41.0082, 28.9784);
+  LatLng endPoint = LatLng(41.0431, 29.0069);
+
+  @override
+  void initState() {
+    super.initState();
+    findShortestPath();
+  }
+
+  void findShortestPath() {
+    // Yol hesaplama algoritmasını uygulayarak en kısa yolun noktalarını bul
+
+    // Örnek yol noktaları
+    List<LatLng> shortestPathPoints = [
+      LatLng(41.0082, 28.9784),
+      LatLng(41.0112, 28.9827),
+      LatLng(41.0141, 28.9865),
+      LatLng(41.0178, 28.9907),
+      LatLng(41.0214, 28.9948),
+      LatLng(41.0252, 28.9987),
+      LatLng(41.0291, 29.0025),
+      LatLng(41.0331, 29.0062),
+      LatLng(41.0371, 29.0099),
+      LatLng(41.0411, 29.0135),
+      LatLng(41.0431, 29.0069),
+    ];
+
+    setState(() {
+      routePoints = shortestPathPoints;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: FlutterMap(
+        options: MapOptions(
+          center: startPoint,
+          zoom: 12,
+        ),
+        layers: [
+          TileLayerOptions(
+            urlTemplate: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+            subdomains: ['a', 'b', 'c'],
+          ),
+          if (routePoints.isNotEmpty)
+            PolylineLayerOptions(
+              polylines: [
+                Polyline(
+                  points: routePoints,
+                  color: Colors.blue,
+                  strokeWidth: 3.0,
+                ),
+              ],
+            ),
+          MarkerLayerOptions(
+            markers: [
+              Marker(
+                width: 80.0,
+                height: 80.0,
+                point: startPoint,
+                builder: (ctx) => Icon(
+                  Icons.circle,
+                  color: Colors.green,
+                ),
+              ),
+              Marker(
+                width: 80.0,
+                height: 80.0,
+                point: endPoint,
+                builder: (ctx) => Icon(
+                  Icons.circle,
+                  color: Colors.red,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+

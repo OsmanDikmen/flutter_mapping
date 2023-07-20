@@ -1,0 +1,111 @@
+import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
+
+void main() {
+  runApp(MaterialApp(
+    home: MyApp(),
+  ));
+}
+
+class MyApp extends StatefulWidget {
+  @override
+  _MyAppState createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  List<LatLng> routePoints = [];
+  LatLng startPoint = LatLng(41.0082, 28.9784);
+  LatLng endPoint = LatLng(41.0431, 29.0069);
+
+  @override
+  void initState() {
+    super.initState();
+    fetchRouteData();
+  }
+
+  Future<void> fetchRouteData() async {
+    // Gerçek zamanlı yönlendirme API'si isteği yapılmalı
+    // ve alınan verileri işlemek için uygun yöntemler kullanılmalı
+
+    // Örnek istek
+    final apiKey = 'YOUR_API_KEY';
+    final apiUrl = 'https://api.directionsapi.com/route?start=${startPoint.latitude},${startPoint.longitude}&end=${endPoint.latitude},${endPoint.longitude}&key=$apiKey';
+
+    final response = await http.get(Uri.parse(apiUrl));
+
+    if (response.statusCode == 200) {
+      final decodedResponse = json.decode(response.body);
+      final route = decodedResponse['route'];
+
+      // Route verileri üzerinden koordinatları al
+      final List<dynamic> coordinates = route['coordinates'];
+
+      final List<LatLng> points = [];
+      for (var coordinate in coordinates) {
+        final double lat = coordinate['lat'];
+        final double lon = coordinate['lon'];
+        final LatLng point = LatLng(lat, lon);
+        points.add(point);
+      }
+
+      setState(() {
+        routePoints = points;
+      });
+    } else {
+      print('Error fetching route data. Status code: ${response.statusCode}');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: FlutterMap(
+        options: MapOptions(
+          center: startPoint, // Başlangıç noktasını merkeze al
+          zoom: 12,
+        ),
+        layers: [
+          TileLayerOptions(
+            urlTemplate: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+            subdomains: ['a', 'b', 'c'],
+          ),
+          if (routePoints.isNotEmpty)
+            PolylineLayerOptions(
+              polylines: [
+                Polyline(
+                  points: routePoints,
+                  color: Colors.blue,
+                  strokeWidth: 3.0,
+                ),
+              ],
+            ),
+          MarkerLayerOptions(
+            markers: [
+              Marker(
+                width: 80.0,
+                height: 80.0,
+                point: startPoint,
+                builder: (ctx) => Icon(
+                  Icons.circle,
+                  color: Colors.green,
+                ),
+              ),
+              Marker(
+                width: 80.0,
+                height: 80.0,
+                point: endPoint,
+                builder: (ctx) => Icon(
+                  Icons.circle,
+                  color: Colors.red,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
